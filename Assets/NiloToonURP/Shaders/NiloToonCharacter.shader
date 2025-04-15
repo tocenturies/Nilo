@@ -3208,10 +3208,11 @@ Shader "Universal Render Pipeline/NiloToon/NiloToon_Character"
         [Tooltip()]
         [Tooltip(Smoothness equals One minus Roughness.)]
         [Sub(_SmoothnessGroup)]_Smoothness("Smoothness", Range(0,1)) = 0.5
+        [Sub(_Smoothness)]_Metallic("Metallic", Range(-1,1)) = 0
 
         [Title(_SmoothnessGroup, ........................................................................................................................................................................................................................................................................................................................................................................)]
 
-        [Title(_SmoothnessGroup, Smoothness or Roughness Map)]
+        [Title(_Metallic, Smoothness or Roughness Map)]
         [Tooltip(Enable this toggle to activate Smoothness or Roughness Map.)]
         [Tooltip(You need to select the correct Map Type.)]
         [SubToggle(_SmoothnessGroup,_SMOOTHNESSMAP)]_UseSmoothnessMap("Enable Map?", Float) = 0
@@ -3356,7 +3357,7 @@ Shader "Universal Render Pipeline/NiloToon/NiloToon_Character"
         [Title(_EnvironmentReflectionGroup, ........................................................................................................................................................................................................................................................................................................................................................................)]
         [Title(_EnvironmentReflectionGroup,Blend Method)]
         [Sub(_EnvironmentReflectionGroup)]_EnvironmentReflectionApplyReplaceBlending("Replace", Range(0,1)) = 1
-        [Sub(_EnvironmentReflectionGroup)]_EnvironmentReflectionApplyAddBlending("Add", Range(0,1)) = 0
+        [Sub(_EnvironmentReflectionGroup)]_EnvironmentReflectionApplyAddBlending("Add", Range(-1,1)) = 0
         
         [Title(_EnvironmentReflectionGroup, ........................................................................................................................................................................................................................................................................................................................................................................)]
 

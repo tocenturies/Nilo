@@ -805,6 +805,7 @@ CBUFFER_START(UnityPerMaterial)
     
     // smoothness
     half    _Smoothness;
+    half    _Metallic;
     half    _SmoothnessMapInputIsRoughnessMap;
     half4   _SmoothnessMapChannelMask;
     half    _SmoothnessMapRemapStart;
@@ -1465,6 +1466,7 @@ struct ToonSurfaceData
     half    specularMask; // store user's remapped specular mask texture, for ramp specular
     half3   normalTS;
     half    smoothness;
+    half    metallic;
 };
 // this struct is similar to URP's Input.hlsl -> "InputData" struct
 // any useful data for lighting will be put into this struct
@@ -2873,12 +2875,21 @@ half GetFinalSmoothness(Varyings input)
     half smoothnessResult = _Smoothness;
 #if _SMOOTHNESSMAP
     half4 texValue = tex2D(_SmoothnessMap, GetUV(input));
-    half smoothnessMultiplierByTexture = dot(texValue, _SmoothnessMapChannelMask);
+    half smoothnessMultiplierByTexture = texValue.r;
     smoothnessMultiplierByTexture = _SmoothnessMapInputIsRoughnessMap ? 1-smoothnessMultiplierByTexture : smoothnessMultiplierByTexture;
     smoothnessMultiplierByTexture = invLerpClamp(_SmoothnessMapRemapStart, _SmoothnessMapRemapEnd, smoothnessMultiplierByTexture); // remap
     smoothnessResult *= smoothnessMultiplierByTexture; // apply
 #endif
     return smoothnessResult;
+}
+half GetFinalMetallic(Varyings input)
+{
+    half metallicResult = _Metallic;
+    #if _SMOOTHNESSMAP
+        half4 texValue = tex2D(_SmoothnessMap, GetUV(input));
+        metallicResult += texValue.g;
+    #endif
+    return saturate(metallicResult);
 }
 // return .rgb is specular RGB, return .a is specular mask 
 half4 GetFinalSpecularRGBA(UVData uvData, half3 baseColor, float facing)
@@ -3027,6 +3038,10 @@ ToonSurfaceData InitializeSurfaceData(Varyings input, UVData uvData, float facin
 
     // smoothness
     output.smoothness = GetFinalSmoothness(input);
+
+    //Metallic
+    output.metallic = GetFinalMetallic(input);
+    //output.albedo = output.albedo - output.albedo * output.metallic;
 
     // normalTS
     output.normalTS = normalTS;
@@ -3632,7 +3647,7 @@ void ApplyEnvironmentReflections(inout ToonSurfaceData surfaceData, Varyings var
     #endif
 
     half3 environmentReflection = GlossyEnvironmentReflectionResult * _EnvironmentReflectionColor * _EnvironmentReflectionBrightness;
-    environmentReflection *= lerp(1,surfaceData.albedo,_EnvironmentReflectionTintAlbedo);
+    //environmentReflection *= lerp(1,surfaceData.albedo,_EnvironmentReflectionTintAlbedo);
 
     half applyIntensity = _EnvironmentReflectionUsage;
 
@@ -3655,8 +3670,8 @@ void ApplyEnvironmentReflections(inout ToonSurfaceData surfaceData, Varyings var
     #endif
     
     // apply to albedo
-    surfaceData.albedo = lerp(surfaceData.albedo,environmentReflection,applyIntensity * _EnvironmentReflectionApplyReplaceBlending);
-    surfaceData.albedo += environmentReflection * applyIntensity * _EnvironmentReflectionApplyAddBlending;
+    surfaceData.albedo = lerp(surfaceData.albedo,environmentReflection,applyIntensity * surfaceData.metallic);
+    //surfaceData.albedo += environmentReflection * applyIntensity * _EnvironmentReflectionApplyAddBlending;
     //surfaceData.alpha = lerp(surfaceData.alpha,1, applyIntensity); // TODO: find out a good way to do environment reflection, similar to matcap(additive) 
 #endif
 }

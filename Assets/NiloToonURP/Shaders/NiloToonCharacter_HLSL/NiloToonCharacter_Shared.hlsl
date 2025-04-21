@@ -3668,6 +3668,10 @@ void ApplyEnvironmentReflections(inout ToonSurfaceData surfaceData, Varyings var
     #if _ISFACE
     applyIntensity *= (1-lightingData.isFaceArea * (1-_EnvironmentReflectionShouldApplyToFaceArea));
     #endif
+
+    float DeColor = min(Desaturate(surfaceData.albedo, 1).r, 0.8);
+    
+    environmentReflection = lerp(environmentReflection * DeColor + surfaceData.albedo, environmentReflection, DeColor);
     
     // apply to albedo
     surfaceData.albedo = lerp(surfaceData.albedo,environmentReflection,applyIntensity * surfaceData.metallic);
